@@ -55,6 +55,26 @@ Trace rules
 - NFR-2: Reports must render within reasonable time for typical datasets (configurable thresholds).
 - NFR-3: Module compatible with PHP 7.3 and FA 2.3.X.
 
+7. Extended Financial Controls (added)
+
+- BR-7: Trial Balance Diagnostics — the system shall detect reasons the trial balance is out of balance (unposted/voided journals, currency mismatches, unapplied allocations, rounding drift) and provide a prioritized diagnostic list with drill-down.
+- BR-8: GL ↔ Subledger Reconciliation — the system shall reconcile GL balances for Bank, AR, AP, Inventory, and Fixed Assets to their respective subledgers and provide exception reports with links to source documents.
+- BR-9: AR / AP Aging & Unapplied Payments — produce aging reports, detect unapplied or partially-applied payments and flag invoices with mismatched payments.
+- BR-10: Journal Entry Controls — surface manual or out-of-period journal entries, large/one-off adjustments, and users who post such entries; support filters and approval workflow recommendations.
+- BR-11: Cut‑off & Period‑End Checks — detect transactions dated outside the reporting period, unusual last-day spikes, and mismatches between shipment and invoice dates.
+- BR-12: Suspense & Clearing Accounts — identify recurring balances in suspense/clearing accounts and propose candidate clearing transactions.
+- BR-13: Audit Trail Completeness — verify presence of source documents for GL entries (POs, invoices, delivery notes) and flag orphaned transactions.
+- BR-14: Snapshot & Period Locking — allow capturing a read‑only snapshot of ledger state at period close to support audit reproducibility and prevent retro edits after signoff.
+
+Configuration additions:
+- `tb_diagnostics_thresholds`: thresholds and rules for trial balance diagnostics (e.g., rounding tolerance, currency mismatch tolerance).
+- `reconciliation_accounts`: mapping of GL accounts to subledger sources for automated reconciliation routines.
+
+Acceptance criteria (extended):
+- Ability to run Trial Balance Diagnostics and receive a prioritized, actionable exception list with drill-down links.
+- GL ↔ subledger reconciliation reports for Bank/AR/AP/Inventory showing matched/unmatched items and suggested resolution steps.
+- Aging reports with unapplied payments flagged and drill-down to allocations.
+
 Configuration & Administrivia
 - Admins must configure:
 	- `final_cash_accounts`: list of GL/bank account IDs considered final cash destinations.
