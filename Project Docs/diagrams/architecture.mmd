@@ -1,0 +1,15 @@
+%% Mermaid architecture diagram for FA Sanity Check
+flowchart LR
+  PO[Purchase Order] --> GRN[Goods Received Note]
+  GRN -->|create stock_moves receipt| StockMovesIn[stock_moves (inbound)]
+  StockMovesIn -->|FIFO assign| Sales[Sales Invoice / Delivery]
+  Sales --> StockMovesOut[stock_moves (outbound)]
+  StockMovesOut --> FIFO[ItemTrace FIFO allocation]
+  Sales -->|creates debtor_trans / payments| Payments[Payments]
+  Payments -->|bank_trans| BankTrans[bank_trans]
+  BankTrans -->|processor or direct| Processor[Processor Accounts]
+  Processor -->|settlement| FinalCash[Final Cash Accounts]
+  FinalCash -->|deposit| BankTrans
+
+  classDef db fill:#f9f,stroke:#333,stroke-width:1px
+  class StockMovesIn,StockMovesOut,BankTrans db
