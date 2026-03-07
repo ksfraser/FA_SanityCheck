@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/../src/IncomeVsCogsDiagnostic.php';
 
-class TestIncomeVsCogs extends TestCase
+class IncomeVsCogsTest extends TestCase
 {
     public function testDetectsMissingAndSmallerIncome()
     {
