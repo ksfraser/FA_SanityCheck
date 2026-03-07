@@ -8,7 +8,8 @@ Files added:
 
 Integration instructions (brief):
 1) Run `fa_module/sql/create_sanity_config_table.sql` in UAT to create the config table.
-2) Hook `fa_module/admin/config.php` into FA admin menu and secure with same permissions as P&L report.
+2) Hook `fa_module/admin/config.php` or `fa_module/pages/admin_reconciliation_accounts.php` into FA admin menu and secure with same permissions as P&L report.
+3) To automatically register menus during module activation, call `sanity_register_all_menus()` from your module manifest or activation routine. If your FA installation exposes `add_menu_item`/`add_menu`, the snippet in `integration/menu_snippet.php` will be used.
 3) Hook `fa_module/pages/trace.php` into Reports menu; developers should replace the PDO connection with FA's DB API and use FA's menu/permission helpers.
 4) Replace placeholder DB queries where necessary to match your FA database naming and relationships.
 
@@ -35,3 +36,6 @@ composer install
 
 Integration note:
 - This module now requires running inside FrontAccounting 2.3.X (the code uses FA DB helper functions `db_query`, `db_fetch`, `db_escape`). The previous PDO fallbacks were removed — ensure the module files are executed from the FA environment (menu integration) rather than directly via PHP CLI or a standalone webserver.
+
+Migration note:
+- Ensure the `sql/create_sanity_config_table.sql` is applied before using the admin UI. The table stores `reconciliation_accounts` as JSON under the `sanity_config` table with `config_key='reconciliation_accounts'`.

@@ -1,0 +1,7 @@
+# Ignore vendor directories and common editor/temp files
+/.idea/
+/vendor/
+fa_module/vendor/
+*.log
+*.cache
+/.vscode/

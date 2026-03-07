@@ -80,6 +80,38 @@ function sanity_register_menu()
     }
 }
 
+// Backwards-compatible registration that also attempts to add admin menu.
+function sanity_register_all_menus()
+{
+    sanity_register_menu();
+    if (function_exists('sanity_register_admin_menu')) {
+        @sanity_register_admin_menu();
+    }
+}
+
+// Add a convenience admin menu registration when running inside FA that
+// supports `add_access` and `add_menu_item` style helpers. This is a
+// conservative addition that will silently no-op when the host FA doesn't
+// expose these functions.
+function sanity_register_admin_menu()
+{
+    if (!function_exists('add_access') || !function_exists('add_menu_item')) {
+        return; // host doesn't provide the menu helpers
+    }
+
+    // Register a capability and add a menu entry under Setup -> Modules
+    @add_access('SA_SANITY', 1);
+    // try to add a menu item; some FA variants expose different APIs — keep defensive
+    try {
+        add_menu_item('modules', 'Sanity Check', 'admin_reconciliation_accounts.php', 'SA_SANITY');
+    } catch (\Throwable $e) {
+        // fall back to legacy helper if available
+        if (function_exists('add_context_menu')) {
+            @add_context_menu('modules', 'Sanity Check', 'admin_reconciliation_accounts.php');
+        }
+    }
+}
+
 /**
  * Upgrade routine placeholder. FA will call this with an older version string
  * to run migration steps. Implement migrations here when schema changes are required.
