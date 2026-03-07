@@ -55,9 +55,18 @@ class TestAdminConfig extends TestCase
     public function testSaveAndGet()
     {
         $map = ['bank' => '1010', 'sales' => '4000'];
+        // Prepare bootstrap query stack: SELECT COUNT -> INSERT -> SELECT config_value
+        global $FA_SANITY_QUERY_STACK;
+        $FA_SANITY_QUERY_STACK = [
+            [['c' => 0]],
+            [],
+            [['config_value' => json_encode($map)]],
+        ];
         $ok = \FA\Sanity\AdminConfig::saveReconciliationAccounts($map);
         $this->assertTrue($ok);
 
+        // Prepare stack for the GET query (SELECT config_value)
+        $FA_SANITY_QUERY_STACK = [[['config_value' => json_encode($map)]]];
         $loaded = \FA\Sanity\AdminConfig::getReconciliationAccounts();
         $this->assertIsArray($loaded);
         $this->assertEquals($map, $loaded);
@@ -66,8 +75,12 @@ class TestAdminConfig extends TestCase
     public function testEmptyDefaults()
     {
         // Simulate empty storage by saving empty map
+        global $FA_SANITY_QUERY_STACK;
+        $FA_SANITY_QUERY_STACK = [[['c' => 0]], [], [['config_value' => json_encode([])]]];
         $ok = \FA\Sanity\AdminConfig::saveReconciliationAccounts([]);
         $this->assertTrue($ok);
+
+        $FA_SANITY_QUERY_STACK = [[['config_value' => json_encode([])]]];
         $loaded = \FA\Sanity\AdminConfig::getReconciliationAccounts();
         $this->assertEquals([], $loaded);
     }

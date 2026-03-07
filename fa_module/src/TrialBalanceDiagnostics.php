@@ -81,4 +81,16 @@ class TrialBalanceDiagnostics
         $samples['ar_sql'] = "SELECT dt.debtor_no, SUM(dt.ov_amount + dt.ov_freight + dt.ov_gst) AS ar_subledger, (SELECT SUM(amount) FROM gl_trans WHERE person_type_id = 10 AND person_id = dt.debtor_no) AS gl_sum FROM debtor_trans dt GROUP BY dt.debtor_no LIMIT 20";
         return $samples;
     }
+
+    /**
+     * Income vs COGS diagnostic.
+     * Attempts to match income GL lines to COGS GL lines by transaction (type/type_no).
+     * Flags rows where no COGS line exists or income < COGS (beyond tolerance).
+     * @param string|null $start_date YYYY-MM-DD
+     * @param string|null $end_date YYYY-MM-DD
+     * @param float $tolerance positive tolerance (e.g., 0.01)
+     * @return array list of findings
+     */
+    // incomeVsCogs implementation moved to `FA\Sanity\IncomeVsCogsDiagnostic`.
 }
+

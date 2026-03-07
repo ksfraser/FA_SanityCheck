@@ -17,31 +17,143 @@
  *
  * @return array Result summary with `status` and `details`.
  */
-function sanity_install()
+class SanityHooks
 {
-    if (!function_exists('db_query')) {
-        return ['status' => 'error', 'details' => 'FA helper functions not available (db_query)'];
+    /**
+     * Install hook called by FA module installer.
+     * Keep DDL/migrations in SQL files; do lightweight registration here.
+     * @return array
+     */
+    public static function install()
+    {
+        if (!function_exists('db_query')) {
+            return ['status' => 'error', 'details' => 'FA helper functions not available (db_query)'];
+        }
+
+        // Schema creation is handled by `sql/create_sanity_config_table.sql`.
+        // Register access and menus if host provides helpers
+        if (function_exists('add_access')) {
+            @add_access('SA_SANITY', _('Sanity Check Access'));
+        }
+        if (function_exists('sanity_register_all_menus')) {
+            @sanity_register_all_menus();
+        }
+
+        return ['status' => 'ok', 'details' => 'installed'];
     }
 
-    // Create the config table if missing
-    $sql = "CREATE TABLE IF NOT EXISTS sanity_config (config_key VARCHAR(128) PRIMARY KEY, config_value TEXT) ENGINE=InnoDB";
-    db_query($sql, "could not create sanity_config table");
+    /**
+     * Uninstall hook.
+     * @param bool $remove_data
+     * @return array
+     */
+    public static function uninstall($remove_data = false)
+    {
+        if (!function_exists('delete_access')) {
+            // best-effort
+        } else {
+            @delete_access('SA_SANITY');
+        }
 
-    // Insert safe defaults if not present
-    $defaults = [
-        'final_cash_accounts' => json_encode([]),
-        'processor_accounts' => json_encode([]),
-        'processor_follow_window_days' => json_encode(30),
-        'anomaly_tolerances' => json_encode(['red'=>0.05,'yellow'=>0.02]),
-    ];
-    foreach ($defaults as $k => $v) {
-        $ek = db_escape($k);
-        $q = "INSERT IGNORE INTO sanity_config (config_key, config_value) VALUES ('".$ek."', '".db_escape($v)."')";
-        db_query($q, "could not insert default $k");
+        if ($remove_data && function_exists('db_query')) {
+            db_query("DROP TABLE IF EXISTS sanity_config", 'could not drop sanity_config');
+        }
+
+        return ['status' => 'ok', 'details' => ($remove_data ? 'data_removed' : 'access_removed')];
     }
 
-    return ['status' => 'ok', 'details' => 'installed'];
+    /**
+     * Register standard menus (delegates to integration/menu_snippet.php)
+     * @return void
+     */
+    public static function register_menu()
+    {
+        // Register access right
+        if (function_exists('add_access')) {
+            @add_access('SA_SANITY', _('Sanity Check Access'));
+        }
+
+        // Preferred: use add_menu_item when available
+        if (function_exists('add_menu_item')) {
+            @add_menu_item('Banking', _('Sanity Check Trace'), '/modules/fa_sanity/fa_module/pages/trace.php', 'SA_SANITY');
+            @add_menu_item('Ledger', _('Sanity Check Admin'), '/modules/fa_sanity/fa_module/pages/admin_reconciliation_accounts.php', 'SA_SANITY');
+            @add_menu_item('Reports', _('Income vs COGS Audit'), '/modules/fa_sanity/fa_module/pages/tb_income_vs_cogs.php', 'SA_SANITY');
+            return;
+        }
+
+        // Fallbacks for other FA variants
+        if (function_exists('add_menu')) {
+            @add_menu('Banking', 'Sanity Check Trace', '/modules/fa_sanity/fa_module/pages/trace.php', 'SA_SANITY');
+            @add_menu('Ledger', 'Sanity Check Admin', '/modules/fa_sanity/fa_module/pages/admin_reconciliation_accounts.php', 'SA_SANITY');
+            @add_menu('Reports', 'Income vs COGS Audit', '/modules/fa_sanity/fa_module/pages/tb_income_vs_cogs.php', 'SA_SANITY');
+            return;
+        }
+
+        // Last resort: attempt to inject into global $menu structure if present
+        global $menu;
+        if (isset($menu) && is_array($menu)) {
+            foreach ($menu as &$mgroup) {
+                if (is_array($mgroup) && isset($mgroup['name'])) {
+                    if (strcasecmp($mgroup['name'], 'Banking') === 0) {
+                        $mgroup['items'][] = ['label'=>_('Sanity Check Trace'), 'url'=>'/modules/fa_sanity/fa_module/pages/trace.php', 'access'=>'SA_SANITY'];
+                    }
+                    if (strcasecmp($mgroup['name'], 'Ledger') === 0) {
+                        $mgroup['items'][] = ['label'=>_('Sanity Check Admin'), 'url'=>'/modules/fa_sanity/fa_module/pages/admin_reconciliation_accounts.php', 'access'=>'SA_SANITY'];
+                    }
+                    if (strcasecmp($mgroup['name'], 'Reports') === 0) {
+                        $mgroup['items'][] = ['label'=>_('Income vs COGS Audit'), 'url'=>'/modules/fa_sanity/fa_module/pages/tb_income_vs_cogs.php', 'access'=>'SA_SANITY'];
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Register admin menu helpers when host exposes menu APIs.
+     * @return void
+     */
+    public static function register_admin_menu()
+    {
+        if (!function_exists('add_access') || !function_exists('add_menu_item')) {
+            return;
+        }
+        @add_access('SA_SANITY', _('Sanity Check Access'));
+        try {
+            add_menu_item('modules', 'Sanity Check', 'admin_reconciliation_accounts.php', 'SA_SANITY');
+        } catch (\Throwable $e) {
+            if (function_exists('add_context_menu')) {
+                @add_context_menu('modules', 'Sanity Check', 'admin_reconciliation_accounts.php');
+            }
+        }
+    }
+
+    /**
+     * Convenience to register both snippet and admin menu.
+     */
+    public static function register_all_menus()
+    {
+        self::register_menu();
+        if (function_exists('SanityHooks::register_admin_menu')) {
+            @self::register_admin_menu();
+        }
+    }
+
+    /**
+     * Upgrade hook placeholder.
+     * @param string $old_version
+     * @return array
+     */
+    public static function upgrade($old_version)
+    {
+        return ['status' => 'ok', 'from' => $old_version];
+    }
 }
+
+// Note: FA manifest should reference the `SanityHooks` class methods directly
+// if your FA variant supports class-based hooks. Example manifest entries:
+//  - install:  ["FA\\Sanity\\SanityHooks", "install"]
+//  - uninstall: ["FA\\Sanity\\SanityHooks", "uninstall"]
+//  - upgrade: ["FA\\Sanity\\SanityHooks", "upgrade"]
 
 /**
  * Uninstall the module. Default behaviour: remove access right and

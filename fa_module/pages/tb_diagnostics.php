@@ -5,8 +5,15 @@ require_once __DIR__ . '/../../src/TrialBalanceDiagnostics.php';
 use FA\Sanity\TrialBalanceDiagnostics;
 
 if (!function_exists('db_query')) {
-    echo json_encode(['error' => 'This page must be run inside FrontAccounting (db_query missing)']);
+    echo "<p>This page must be run inside FrontAccounting (db_query missing).</p>";
     exit;
+}
+
+// Internal module navigation
+$menuSnippet = __DIR__ . '/../integration/menu_snippet.php';
+if (file_exists($menuSnippet)) {
+    include_once $menuSnippet;
+    if (function_exists('sanity_render_nav')) sanity_render_nav();
 }
 
 $diag = new TrialBalanceDiagnostics();

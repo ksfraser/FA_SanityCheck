@@ -1,0 +1,16 @@
+{
+  "name": "fa_sanity",
+  "version": "0.1.0",
+  "description": "Sanity Check module for FrontAccounting (snapshot + reconciliation helpers)",
+  "author": "FA Sanity Team",
+  "hooks": {
+    "install": ["SanityHooks", "install"],
+    "upgrade": ["SanityHooks", "upgrade"],
+    "uninstall": ["SanityHooks", "uninstall"]
+  },
+  "menus": [
+    { "parent": "Banking", "label": "Sanity Check Trace", "path": "pages/trace.php", "access": "SA_SANITY" },
+    { "parent": "Ledger", "label": "Sanity Check Admin", "path": "pages/admin_reconciliation_accounts.php", "access": "SA_SANITY" }
+  ],
+  "notes": "Example manifest for FA variants that support class-based hooks. If your FA expects procedural hooks, adapt accordingly. Ensure `sql/create_sanity_config_table.sql` is applied by the installer."
+}

@@ -11,6 +11,13 @@ if (!function_exists('db_query')) {
     exit;
 }
 
+// Internal module navigation
+$menuSnippet = __DIR__ . '/../integration/menu_snippet.php';
+if (file_exists($menuSnippet)) {
+  include_once $menuSnippet;
+  if (function_exists('sanity_render_nav')) sanity_render_nav();
+}
+
 $builder = new SnapshotBuilder();
 $message = null;
 

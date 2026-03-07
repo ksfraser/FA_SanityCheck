@@ -9,7 +9,14 @@ Files added:
 Integration instructions (brief):
 1) Run `fa_module/sql/create_sanity_config_table.sql` in UAT to create the config table.
 2) Hook `fa_module/admin/config.php` or `fa_module/pages/admin_reconciliation_accounts.php` into FA admin menu and secure with same permissions as P&L report.
-3) To automatically register menus during module activation, call `sanity_register_all_menus()` from your module manifest or activation routine. If your FA installation exposes `add_menu_item`/`add_menu`, the snippet in `integration/menu_snippet.php` will be used.
+3) To automatically register menus during module activation, reference the `SanityHooks` class in your module manifest. Example manifest entries (FA variant supporting class hooks):
+
+```
+install: ["SanityHooks", "install"]
+upgrade: ["SanityHooks", "upgrade"]
+```
+
+The `SanityHooks::register_menu()` method will add entries into the host FA menus. The `integration/menu_snippet.php` now provides internal module navigation (links between module pages) and should be used to render intra-module navigation rather than registering host-level menus.
 3) Hook `fa_module/pages/trace.php` into Reports menu; developers should replace the PDO connection with FA's DB API and use FA's menu/permission helpers.
 4) Replace placeholder DB queries where necessary to match your FA database naming and relationships.
 

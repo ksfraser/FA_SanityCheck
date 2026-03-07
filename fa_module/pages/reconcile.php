@@ -13,6 +13,13 @@ if (!function_exists('db_query')) {
     exit;
 }
 
+// Internal module navigation
+$menuSnippet = __DIR__ . '/../integration/menu_snippet.php';
+if (file_exists($menuSnippet)) {
+  include_once $menuSnippet;
+  if (function_exists('sanity_render_nav')) sanity_render_nav();
+}
+
 $series = $_GET['series'] ?? null;
 $builder = new SnapshotBuilder();
 $seriesList = $builder->listSeries();
